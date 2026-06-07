@@ -1,0 +1,13 @@
+{
+  "name": "small-cannon",
+  "version": "1.0.2",
+  "title": "Small Cannon",
+  "author": "picon",
+  "contact": "",
+  "homepage": "",
+  "description": "Adds a smaller artillery turret available earlier in the game (after production science). Uses standard tank cannon shells. Perfect for mid-game base defence.",
+  "factorio_version": "2.0",
+  "dependencies": [
+    "base >= 2.0"
+  ]
+}
