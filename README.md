@@ -1,188 +1,194 @@
 # Small Cannon
 
-Mod do Factorio 2.0 dodający małą armatę artyleryjską dostępną wcześniej niż standardowa artyleria — idealna do obrony bazy w środkowej fazie gry.
+A Factorio 2.0 mod that adds a small artillery turret available earlier than standard artillery — ideal for mid-game base defense.
 
 ---
 
-## Spis treści
+## Table of Contents
 
-1. [Opis](#opis)
-2. [Nowa wieżyczka: Mała artyleria](#nowa-wieżyczka-mała-artyleria)
-3. [Nowa amunicja: Żelazny pocisk artyleryjski](#nowa-amunicja-żelazny-pocisk-artyleryjski)
-4. [Technologia](#technologia)
-5. [Receptury](#receptury)
-6. [Porównanie: Mała vs Standardowa artyleria](#porównanie-mała-vs-standardowa-artyleria)
-7. [Instalacja](#instalacja)
-8. [Pliki moda](#pliki-moda)
-9. [Znane problemy](#znane-problemy)
-
----
-
-## Opis
-
-**Small Cannon** wprowadza mniejszą, tańszą i wcześniej dostępną wieżyczkę artyleryjską wraz z dedykowaną, tańszą amunicją. Doskonałe uzupełnienie bazy w momencie, gdy standardowa artyleria jest jeszcze poza zasięgiem (wymaga space science).
+1. [Description](#description)
+2. [New turret: Small Artillery](#new-turret-small-artillery)
+3. [New ammo: Small Cannon Shell](#new-ammo-small-cannon-shell)
+4. [Technology](#technology)
+5. [Recipes](#recipes)
+6. [Comparison: Small vs Standard Artillery](#comparison-small-vs-standard-artillery)
+7. [Installation](#installation)
+8. [Mod files](#mod-files)
+9. [Known issues](#known-issues)
+10. [License](#license)
 
 ---
 
-## Nowa wieżyczka: Mała artyleria
+## Description
 
-| Cecha | Wartość |
-|-------|---------|
-| Nazwa | `small-artillery-turret` |
+**Small Cannon** introduces a smaller, cheaper, and earlier artillery turret together with dedicated, cheaper ammunition. It is a great addition to your base when standard artillery is still out of reach because it requires space science.
+
+The turret uses the `cannon-shell` ammo category, so it can also accept regular tank cannon shells for close-range use. Its dedicated `small-cannon-shell` ammo is designed for long-range artillery fire.
+
+---
+
+## New turret: Small Artillery
+
+| Property | Value |
+|----------|-------|
+| Prototype name | `small-artillery-turret` |
 | HP | 500 |
-| Zasięg | 120 kratek |
-| Minimalny zasięg | 8 kratek |
-| Szybkostrzelność | co 2.5 sekundy (150 ticków) |
-| Czas obrotu | 0.8s (pełny obrót 360°) |
-| Kategoria amunicji | `artillery-shell` |
-| Odległość tworzenia pocisku | 1.5 |
+| Range | 96 tiles |
+| Minimum range | 5 tiles |
+| Fire rate | every 1 second (60 ticks) |
+| Ammo category | `cannon-shell` |
+| Projectile creation distance | 1.5 |
 
-**Automatyczne celowanie** — wieżyczka sama namierza i ostrzeliwuje wrogów w zasięgu, tak jak standardowa artyleria.
-
----
-
-## Nowa amunicja: Żelazny pocisk artyleryjski
-
-Żelazny pocisk artyleryjski to tańsza alternatywa dla standardowych pocisków. Dzieli tę samą kategorię amunicji (`artillery-shell`), więc może być używany zarówno w małej, jak i w standardowej artylerii — i odwrotnie.
-
-| Cecha | Wartość |
-|-------|---------|
-| Nazwa | `iron-cannon-shell` |
-| Obrażenia | 150 (eksplozja) |
-| Promień wybuchu | 4 kratki |
-| Czas przeładowania | 1s (60 ticków) |
-| Pojemność magazynka | 1 |
-| Stos w ekwipunku | 50 sztuk |
-
-**Skutki trafienia:**
-- Eksplozja (wizualna) w miejscu uderzenia
-- Obszarowe obrażenia w promieniu 4 kratek
-- Niszczenie dekoracji (drzewa, skały) w promieniu 4 kratek
+**Automatic targeting** — the turret automatically targets and fires at enemies within range, just like standard artillery.
 
 ---
 
-## Technologia
+## New ammo: Small Cannon Shell
 
-**Small Artillery** — technologia odblokowująca małą armatę i żelazne pociski.
+Small Cannon Shell is a cheaper, dedicated long-range shell for the small artillery turret. It uses the `cannon-shell` ammo category, which keeps the turret compatible with regular tank cannon shells while allowing this custom shell to reach artillery-like range.
 
-| Cecha | Wartość |
-|-------|---------|
-| Nazwa | `small-artillery` |
-| Wymagania wstępne | `military-3`, `production-science-pack`, `engine` |
-| Koszt | 200 jednostek nauki |
-| Czas badania | 30 sekund |
-| Używane pakiety nauki | military (szary), production (fioletowy), chemical (niebieski) |
-| Efekty | Odblokowuje recepturę `small-artillery-turret` i `iron-cannon-shell` |
+| Property | Value |
+|----------|-------|
+| Prototype name | `small-cannon-shell` |
+| Projectile name | `small-cannon-shell-projectile` |
+| Projectile type | `artillery-projectile` |
+| Damage | 150 explosion damage |
+| Explosion radius | 4 tiles |
+| Maximum ammo range | 96 tiles |
+| Reload time | 1 second (60 ticks) |
+| Magazine size | 1 |
+| Inventory stack size | 50 |
 
-Dostępna po uzyskaniu production science (fioletowe pakiety) — jeszcze przed space science (żółte pakiety).
-
----
-
-## Receptury
-
-### Mała artyleria
-
-```
-Czas wytwarzania: 5s
-Składniki:
-  - 30x stal (steel-plate)
-  - 20x koło zębate (iron-gear-wheel)
-  - 10x silnik (engine-unit)
-  -  5x silnik elektryczny (electric-engine-unit)
-  - 10x układ zaawansowany (advanced-circuit)
-Wynik: 1x small-artillery-turret
-```
-
-### Żelazny pocisk artyleryjski
-
-```
-Czas wytwarzania: 3s
-Składniki:
-  - 6x żelazo (iron-plate)
-  - 3x stal (steel-plate)
-  - 2x materiały wybuchowe (explosives)
-Wynik: 1x iron-cannon-shell
-```
+**Hit effects:**
+- Visual explosion at the impact point
+- Area explosion damage within a 4-tile radius
+- Decorative removal, such as trees and rocks, within a 4-tile radius
 
 ---
 
-## Porównanie: Mała vs Standardowa artyleria
+## Technology
 
-| Cecha | Mała artyleria | Standardowa artyleria |
-|-------|---------------|----------------------|
+**Small Artillery** — a technology that unlocks the small artillery turret and Small Cannon Shells.
+
+| Property | Value |
+|----------|-------|
+| Prototype name | `small-artillery` |
+| Prerequisites | `military-3`, `production-science-pack`, `engine` |
+| Cost | 200 research units |
+| Research time | 30 seconds |
+| Science packs | military (gray), production (purple), chemical (blue) |
+| Effects | Unlocks the `small-artillery-turret` and `small-cannon-shell` recipes |
+
+Available after unlocking production science (purple science packs), before space science.
+
+---
+
+## Recipes
+
+### Small Artillery Turret
+
+```
+Crafting time: 5s
+Ingredients:
+  - 30x steel plate (steel-plate)
+  - 20x iron gear wheel (iron-gear-wheel)
+  - 10x engine unit (engine-unit)
+  -  5x electric engine unit (electric-engine-unit)
+  - 10x advanced circuit (advanced-circuit)
+Result: 1x small-artillery-turret
+```
+
+### Small Cannon Shell
+
+```
+Crafting time: 3s
+Ingredients:
+  - 6x iron plate (iron-plate)
+  - 3x steel plate (steel-plate)
+  - 2x explosives (explosives)
+Result: 1x small-cannon-shell
+```
+
+---
+
+## Comparison: Small vs Standard Artillery
+
+| Property | Small Artillery | Standard Artillery |
+|----------|-----------------|--------------------|
 | HP | 500 | 1000 |
-| Zasięg | 120 | 224 |
-| Szybkostrzelność | co 2.5s (szybciej) | co 3s |
-| Obrażenia na pocisk | 150 | 500 |
-| Promień wybuchu | 4 | 8 |
-| Zajmowana przestrzeń | ~2×2 kratki | ~3×3 kratki |
-| Koszt wieżyczki | ok. 65 surowców | ok. 125 surowców |
-| Koszt amunicji | 6 żelaza + 3 stali + 2 mat. wyb. | 8 stali + 5 mat. wyb. + 2 plastiku |
-| Wymagana technologia | **production science** | **space science** |
-| Fazowanie | Średnia gra | Późna gra |
+| Range | 96 | 224 |
+| Fire rate | every 1s | every 3s |
+| Damage per shell | 150 | 500 |
+| Explosion radius | 4 | 8 |
+| Footprint | ~2×2 tiles | ~3×3 tiles |
+| Turret cost | about 65 resources | about 125 resources |
+| Ammo cost | 6 iron + 3 steel + 2 explosives | 8 steel + 5 explosives + 2 plastic |
+| Required technology | **production science** | **space science** |
+| Game stage | Mid game | Late game |
 
 ---
 
-## Instalacja
+## Installation
 
-### Ręcznie
+### Manual installation
 
-1. Skopiuj folder `small-cannon` do katalogu modów Factorio:
+1. Copy the `small-cannon` folder to your Factorio mods directory:
 
-   | System | Ścieżka |
-   |--------|---------|
+   | System | Path |
+   |--------|------|
    | **Linux** | `~/.factorio/mods/small-cannon/` |
    | **Windows** | `%appdata%/Factorio/mods/small-cannon/` |
    | **macOS** | `~/Library/Application Support/factorio/mods/small-cannon/` |
 
-2. Uruchom Factorio — mod powinien pojawić się na liście modów.
-3. Włącz moda i kliknij **Synchronize mods** (lub uruchom grę).
+2. Launch Factorio — the mod should appear in the mods list.
+3. Enable the mod and click **Synchronize mods**, or start the game.
 
-### Poprzez portal modów
+### Through the Mod Portal
 
-*(Mod nie jest obecnie opublikowany w portalu Factorio Mod Portal)*
+*(The mod is not currently published on the Factorio Mod Portal.)*
 
 ---
 
-## Pliki moda
+## Mod files
 
 ```
 small-cannon/
-├── info.json            # Metadane moda (nazwa, wersja, zależności)
-├── data.lua             # Nowe prototypy: amunicja, pocisk, receptury, technologia
-├── data-updates.lua     # Kopie bazowej wieżyczki i działa + modyfikacje
-└── README.md            # Ten plik
+├── info.json            # Mod metadata: name, version, dependencies
+├── data.lua             # New prototypes: ammo, projectile, recipes, technology
+├── data-updates.lua     # Copies and modifies the base turret and gun
+├── locale/              # Translations for supported languages
+└── README.md            # This file
 ```
 
 ### `data.lua`
 
-Definiuje wszystkie nowe prototypy, które nie zależą od danych bazowych:
-- `iron-cannon-shell` — amunicja
-- `iron-cannon-shell-projectile` — pocisk
-- Receptury dla wieżyczki i amunicji
-- Technologia `small-artillery`
+Defines all new prototypes that do not depend on base game prototypes:
+- `small-cannon-shell` — ammo item
+- `small-cannon-shell-projectile` — artillery projectile
+- Recipes for the turret and ammo
+- Technology `small-artillery`
 
 ### `data-updates.lua`
 
-Uruchamiany po załadowaniu danych bazowych. Kopiuje prototyp standardowej wieżyczki artyleryjskiej oraz jej działa (`artillery-wagon-cannon`) i modyfikuje je:
-- Skaluje grafikę wieżyczki do 65%
-- Zmniejsza statystyki (HP, zasięg, obrażenia)
-- Zmniejsza collision_box i selection_box
-- Tworzy odpowiednik itemu i corpse
-- Tworzy nowy prototyp działa (`small-artillery-cannon`) ze zmodyfikowanymi parametrami ataku (zasięg, szybkostrzelność)
-- Wiąże nową wieżyczkę z nowym działem przez pole `gun`
+Runs after base data is loaded. It copies the standard artillery turret prototype and its gun (`artillery-wagon-cannon`), then modifies them:
+- Scales the turret graphics to 65%
+- Reduces turret stats such as HP and range
+- Reduces the collision box and selection box
+- Creates the matching item and corpse/remnants prototypes
+- Creates a new gun prototype (`small-artillery-cannon`) with modified attack parameters, such as range and fire rate
+- Links the new turret to the new gun through the `gun` field
 
 ---
 
-## Znane problemy
+## Known issues
 
-- Grafika działa na zasadzie **przeskalowania** oryginalnej tekstury artylerii — może nie wyglądać idealnie proporcjonalnie.
-- Animacja pocisku wykorzystuje grafikę standardowego pocisku artyleryjskiego (zamiast dedykowanej).
-- Mod nie był testowany z innymi modami dodającymi artylerię — mogą wystąpić konflikty kategorii amunicji.
-- Wymaga **Factorio 2.0** — nie działa z wersją 1.1.
+- The turret graphics are based on a **scaled-down** version of the original artillery turret texture, so the proportions may not look perfect.
+- The shell animation uses the standard artillery projectile graphics instead of dedicated custom art.
+- The mod has not been tested with other mods that add or modify artillery, so ammo-category conflicts may occur.
+- Requires **Factorio 2.0** — it does not work with Factorio 1.1.
 
 ---
 
-## Licencja
+## License
 
-MIT — możesz swobodnie modyfikować i rozpowszechniać.
+MIT — you are free to modify and redistribute this mod.
