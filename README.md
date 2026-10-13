@@ -221,6 +221,7 @@ Runs during gameplay. Keeps a registry of all placed small turrets, disables the
 - The mod has not been tested with other mods that add or modify artillery, so ammo-category conflicts may occur.
 - The script only fires `small-cannon-shell` ammo — load the custom shells. Regular tank shells can still be fired manually with the artillery remote.
 - The barrel turns toward the targeted cluster (via `relative_turret_orientation`, at 10x the vanilla traverse speed so it keeps up with moving targets) but does not play the full vanilla firing cycle — the gun itself never shoots, the shell is spawned by the script. You will see the traverse, the muzzle flash and the shell arcing to the target.
+- When firing is done (no targets, group below minimum, or no ammo), every barrel returns to the shared north parking direction.
 - If the barrel persistently points away from the target (e.g. a quarter turn off), pick a correction in the **Aim calibration** map setting (dropdown in eighth-turn steps: `±0.125`, `±0.25`, `±0.375`, `±0.5`) and report the working value so it can become the default.
 - Requires **Factorio 2.0** — it does not work with Factorio 1.1.
 

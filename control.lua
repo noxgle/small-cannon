@@ -177,6 +177,17 @@ local function aim_turret(turret, target, offset)
   end
 end
 
+-- Default rest direction, like vanilla parking: when firing is done (no
+-- targets, below-minimum group, or no ammo), every barrel returns to face
+-- north so the whole battery aligns the same way. Offset-aware, like aiming.
+local PARK_ORIENTATION = 0
+
+local function park_turret(turret)
+  if turret.relative_turret_orientation == nil then return end
+  storage.aim_targets[turret.unit_number] = nil
+  turret.relative_turret_orientation = (PARK_ORIENTATION + get_aim_offset()) % 1
+end
+
 -- ---------------------------------------------------------------------------
 -- Firing
 -- ---------------------------------------------------------------------------
@@ -226,10 +237,13 @@ local function scan_turret(turret, radius, min_targets, tick)
   local surface = turret.surface
   if not surface or not surface.valid then return "dead" end
 
-  -- No ammo => nothing to do: skip the expensive enemy scan AND the barrel
-  -- traverse, so an unloaded turret sits still instead of tracking targets.
+  -- No ammo => nothing to shoot: skip the expensive enemy scan and park the
+  -- barrel, so an unloaded turret aligns with the resting battery.
   local ammo_inv = turret.get_inventory(defines.inventory.artillery_turret_ammo)
-  if not ammo_inv or ammo_inv.get_item_count(AMMO_NAME) < 1 then return "ok" end
+  if not ammo_inv or ammo_inv.get_item_count(AMMO_NAME) < 1 then
+    park_turret(turret)
+    return "ok"
+  end
 
   local pos = turret.position
   local area = {
@@ -241,7 +255,10 @@ local function scan_turret(turret, radius, min_targets, tick)
     area = area,
     type = { "unit", "turret", "unit-spawner" }
   })
-  if #candidates == 0 then return "ok" end
+  if #candidates == 0 then
+    park_turret(turret)
+    return "ok"
+  end
 
   local min2 = MIN_RANGE * MIN_RANGE
   local max2 = RANGE * RANGE
@@ -258,7 +275,10 @@ local function scan_turret(turret, radius, min_targets, tick)
       end
     end
   end
-  if #enemies < min_targets then return "ok" end
+  if #enemies < min_targets then
+    park_turret(turret)
+    return "ok"
+  end
 
   local centroid = find_best_cluster(enemies, pos, radius, min_targets)
   if centroid then
@@ -269,6 +289,8 @@ local function scan_turret(turret, radius, min_targets, tick)
     storage.aim_targets[turret.unit_number] = centroid
     aim_turret(turret, centroid, get_aim_offset())
     try_fire(turret, centroid, tick)
+  else
+    park_turret(turret)
   end
   return "ok"
 end
