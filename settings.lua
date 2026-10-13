@@ -29,13 +29,15 @@ data:extend({
     maximum_value = 10,
     order = "c"
   },
+  -- NOTE: string dropdown instead of a double setting on purpose: the
+  -- in-game numeric field does not accept typing a minus sign, so negative
+  -- offsets would be unreachable. Allowed values cover full/half/quarter turns.
   {
-    type = "double-setting",
+    type = "string-setting",
     name = "small-cannon-aim-offset",
     setting_type = "runtime-global",
-    default_value = 0,
-    minimum_value = -0.5,
-    maximum_value = 0.5,
+    default_value = "0",
+    allowed_values = { "0", "0.25", "-0.25", "0.5", "-0.5" },
     order = "d"
   }
 })

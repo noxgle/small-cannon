@@ -8,8 +8,8 @@ Factorio loads mod data in a fixed order — getting this wrong breaks the mod:
 
 1. **`data.lua`** — runs first, defines *new* prototypes (ammo, projectile, recipes, technology). Must not reference base game prototypes. The turret entity + gun are deep-copied in data-updates.lua.
 2. **`data-updates.lua`** — runs after all base data is loaded. Deep-copies both the standard artillery turret (`artillery-turret`) and its gun (`artillery-wagon-cannon`), then modifies both.
-3. **`settings.lua`** — defines runtime-global settings (`small-cannon-scan-interval`, `small-cannon-cluster-radius`, `small-cannon-min-targets`, `small-cannon-aim-offset`).
-4. **`control.lua`** — runtime script (variant B smart targeting). Keeps a turret registry in `storage`, sets turrets `active = false` to suppress vanilla auto-fire, scans for enemy clusters round-robin, and fires script-spawned projectiles.
+3. **`settings.lua`** — defines runtime-global settings (`small-cannon-scan-interval`, `small-cannon-cluster-radius`, `small-cannon-min-targets`, `small-cannon-aim-offset` — the last one is a string dropdown, NOT a double, because the in-game numeric field rejects typing a minus sign).
+4. **`control.lua`** — runtime script (variant B smart targeting). Keeps a turret registry in `storage`, scans for enemy clusters round-robin, and fires script-spawned projectiles (vanilla auto-fire is off via the prototype flag, turrets stay active).
 
 If you add a new file, stage it in the correct phase: use `data.lua` for standalone prototypes, `data-updates.lua` for anything that reads or modifies base prototypes, `control.lua` for runtime behavior.
 

@@ -157,6 +157,15 @@ local function orientation_to(from_pos, to_pos)
   return o
 end
 
+-- Reads the aim-offset setting. Handles both the current string dropdown
+-- ("0.25", "-0.25", ...) and a legacy numeric value from older mod versions.
+local function get_aim_offset()
+  local v = settings.global["small-cannon-aim-offset"].value
+  if type(v) == "number" then return v end
+  if type(v) == "string" then return tonumber(v) or 0 end
+  return 0
+end
+
 local function aim_turret(turret, target, offset)
   if turret.relative_turret_orientation == nil then return end
   local o = orientation_to(turret.position, target)
@@ -258,8 +267,7 @@ local function scan_turret(turret, radius, min_targets, tick)
     -- (Ammo is checked at the top of this function, so we always can fire
     -- when the cooldown allows.)
     storage.aim_targets[turret.unit_number] = centroid
-    local offset = settings.global["small-cannon-aim-offset"].value or 0
-    aim_turret(turret, centroid, offset)
+    aim_turret(turret, centroid, get_aim_offset())
     try_fire(turret, centroid, tick)
   end
   return "ok"
@@ -274,7 +282,7 @@ local function on_tick(event)
   -- that has a target). The engine eases the barrel toward the set angle at
   -- turret_rotation_speed, so this keeps it converging on the latest target
   -- instead of drifting or stalling between throttled scans.
-  local offset = settings.global["small-cannon-aim-offset"].value or 0
+  local offset = get_aim_offset()
   for unit, target in pairs(storage.aim_targets) do
     local turret = storage.small_turrets[unit]
     if turret and turret.valid then
