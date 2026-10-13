@@ -11,8 +11,11 @@
 -- their expensive shells). Spawning our own projectile keeps full control:
 -- only small turrets fire and only small-cannon-shells are consumed.
 --
--- NOTE: while this script is active the turret is set to active=false, so any
--- regular tank shells loaded into it will sit idle. Load small-cannon-shells.
+-- NOTE: vanilla auto-fire is disabled at the prototype level
+-- (disable_automatic_firing in data-updates.lua), so turrets stay ACTIVE and
+-- animated -- they just never shoot on their own. The script only consumes
+-- small-cannon-shells; regular tank shells can still be fired manually with
+-- the artillery remote.
 
 local TURRET_NAME = "small-artillery-turret"
 local AMMO_NAME = "small-cannon-shell"
@@ -40,8 +43,11 @@ local function register_turret(entity)
   if not entity or not entity.valid then return end
   if entity.name ~= TURRET_NAME then return end
   ensure_storage()
-  -- Disable vanilla auto-fire: singles must not be engaged.
-  entity.active = false
+  -- Keep the turret active so animations, alert icons and inserters work.
+  -- (Vanilla auto-fire is disabled via the prototype's
+  -- disable_automatic_firing flag; also re-activates turrets placed by older
+  -- mod versions that used active = false.)
+  entity.active = true
   local unit = entity.unit_number
   if not storage.small_turrets[unit] then
     storage.small_turrets[unit] = entity
@@ -66,7 +72,7 @@ local function resync_turrets()
   for _, surface in pairs(game.surfaces) do
     local found = surface.find_entities_filtered({ name = TURRET_NAME })
     for _, entity in pairs(found) do
-      entity.active = false
+      entity.active = true
       local unit = entity.unit_number
       storage.small_turrets[unit] = entity
       storage.turret_order[#storage.turret_order + 1] = unit

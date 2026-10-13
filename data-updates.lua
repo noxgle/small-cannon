@@ -50,6 +50,11 @@ small_turret.name = "small-artillery-turret"
 -- Stats
 small_turret.max_health = 500
 small_turret.minable = { mining_time = 1, result = "small-artillery-turret" }
+-- No vanilla auto-fire: targeting is fully script-driven (control.lua fires at
+-- the largest enemy cluster). The turret stays ACTIVE so its idle animations,
+-- alert icons and inserters keep working -- it just never shoots on its own.
+-- Manual artillery-remote targeting still works.
+small_turret.disable_automatic_firing = true
 -- Scale down collision/selection box to match smaller visuals
 if small_turret.collision_box then
   small_turret.collision_box = {

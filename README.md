@@ -46,7 +46,7 @@ The turret uses the `cannon-shell` ammo category, so it can also accept regular 
 
 ## Smart cluster targeting
 
-The turret's vanilla auto-fire is disabled (`control.lua` sets the turret inactive). Instead, a script scans for enemy clusters and fires one custom shell at the center of the **largest** cluster:
+The turret's vanilla auto-fire is disabled at the prototype level (`disable_automatic_firing`), so the turret stays active and animated — it just never shoots on its own. Instead, a script scans for enemy clusters and fires one custom shell at the center of the **largest** cluster:
 
 - A cluster means at least `Minimum targets per cluster` enemies (biters, spitters, worms, spawners) within `Cluster radius` of each other.
 - The largest cluster wins; ties go to the cluster closest to the turret.
@@ -218,7 +218,8 @@ Runs during gameplay. Keeps a registry of all placed small turrets, disables the
 - The turret graphics are based on a **scaled-down** version of the original artillery turret texture, so the proportions may not look perfect.
 - The shell animation uses the standard artillery projectile graphics instead of dedicated custom art.
 - The mod has not been tested with other mods that add or modify artillery, so ammo-category conflicts may occur.
-- With smart targeting active, regular tank shells loaded into the turret sit idle — the script only fires `small-cannon-shell` ammo. Load the custom shells.
+- The script only fires `small-cannon-shell` ammo — load the custom shells. Regular tank shells can still be fired manually with the artillery remote.
+- The barrel does not traverse toward script-fired targets (the gun itself never shoots — the shell is spawned by the script). You will see the muzzle flash and the shell arcing to the target.
 - Requires **Factorio 2.0** — it does not work with Factorio 1.1.
 
 ---
