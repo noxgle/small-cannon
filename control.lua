@@ -11,6 +11,12 @@
 -- their expensive shells). Spawning our own projectile keeps full control:
 -- only small turrets fire and only small-cannon-shells are consumed.
 --
+-- Barrel aiming copies the engine-assigned orientation of the freshly spawned
+-- muzzle flash, so the barrel points exactly where the shot animation
+-- points. The computed angle (+ Aim calibration setting) is used for
+-- tracking between shots and as fallback when the flash orientation is
+-- unreadable.
+--
 -- NOTE: vanilla auto-fire is disabled at the prototype level
 -- (disable_automatic_firing in data-updates.lua), so turrets stay ACTIVE and
 -- animated -- they just never shoot on their own. The script only consumes
@@ -167,14 +173,32 @@ local function get_aim_offset()
 end
 
 local function aim_turret(turret, target, offset)
-  if turret.relative_turret_orientation == nil then return end
+  if turret.relative_turret_orientation == nil then return nil end
   local o = orientation_to(turret.position, target)
   if o ~= nil then
     -- Diagnostic calibration (mod setting small-cannon-aim-offset, in full
     -- turns): added on top of the computed angle. Use it if the barrel
     -- persistently points away from the muzzle-flash direction.
-    turret.relative_turret_orientation = (o + (offset or 0)) % 1
+    local applied = (o + (offset or 0)) % 1
+    turret.relative_turret_orientation = applied
+    return applied
   end
+  return nil
+end
+
+-- Reads the engine-assigned orientation of a freshly created oriented entity
+-- (here: the muzzle flash). The engine orients the flash along
+-- position -> target, so its angle IS the true shot direction -- copying it
+-- onto the barrel sidesteps any convention mismatch in our own math.
+-- Returns a number in [0, 1) or nil. pcall-guarded: not every entity type
+-- exposes a readable orientation, and a failed read must never break firing.
+local function read_flash_orientation(flash)
+  if not flash or not flash.valid then return nil end
+  local ok, value = pcall(function() return flash.orientation end)
+  if ok and type(value) == "number" and value >= 0 and value < 1 then
+    return value
+  end
+  return nil
 end
 
 -- Default rest direction, like vanilla parking: when firing is done (no
@@ -215,12 +239,20 @@ local function try_fire(turret, centroid, tick)
   -- NOTE: oriented explosions (like the muzzle flash) REQUIRE a target when
   -- created from script, otherwise create_entity throws unrecoverably.
   if prototypes.entity[MUZZLE_FLASH] then
-    surface.create_entity({
+    local flash = surface.create_entity({
       name = MUZZLE_FLASH,
       position = muzzle,
       target = { x = centroid.x, y = centroid.y },
       force = turret.force
     })
+    -- Aim the barrel EXACTLY like the shot animation: copy the engine's own
+    -- orientation from the flash we just spawned. When unreadable, keep the
+    -- math-derived angle already set during the scan (fallback, no harm).
+    local derived = read_flash_orientation(flash)
+    if derived ~= nil and turret.valid and turret.relative_turret_orientation ~= nil then
+      turret.relative_turret_orientation = derived
+      storage.aim_targets[turret.unit_number] = derived
+    end
   end
   surface.create_entity({
     name = PROJECTILE_NAME,
@@ -286,8 +318,10 @@ local function scan_turret(turret, radius, min_targets, tick)
     -- is blocked by cooldown, so the turret visibly tracks like vanilla.
     -- (Ammo is checked at the top of this function, so we always can fire
     -- when the cooldown allows.)
-    storage.aim_targets[turret.unit_number] = centroid
-    aim_turret(turret, centroid, get_aim_offset())
+    local applied = aim_turret(turret, centroid, get_aim_offset())
+    if applied ~= nil then
+      storage.aim_targets[turret.unit_number] = applied
+    end
     try_fire(turret, centroid, tick)
   else
     park_turret(turret)
@@ -300,15 +334,18 @@ end
 -- ---------------------------------------------------------------------------
 local function on_tick(event)
   ensure_storage()
-  -- Re-pin stored barrel aims every tick (cheap: one float write per turret
-  -- that has a target). The engine eases the barrel toward the set angle at
-  -- turret_rotation_speed, so this keeps it converging on the latest target
-  -- instead of drifting or stalling between throttled scans.
-  local offset = get_aim_offset()
-  for unit, target in pairs(storage.aim_targets) do
-    local turret = storage.small_turrets[unit]
-    if turret and turret.valid then
-      aim_turret(turret, target, offset)
+  -- Re-pin stored barrel angles every tick (cheap: one float write per turret
+  -- that has a target). Entries are final orientation numbers: math-derived
+  -- at scan time, engine-derived from the muzzle flash at fire time. The
+  -- engine eases the barrel toward the set angle at turret_rotation_speed.
+  -- (Non-number entries from older mod versions are ignored; they are wiped
+  -- on the next configuration-changed resync anyway.)
+  for unit, angle in pairs(storage.aim_targets) do
+    if type(angle) == "number" then
+      local turret = storage.small_turrets[unit]
+      if turret and turret.valid and turret.relative_turret_orientation ~= nil then
+        turret.relative_turret_orientation = angle
+      end
     end
   end
   local interval = settings.global["small-cannon-scan-interval"].value or 60
