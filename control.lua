@@ -134,6 +134,30 @@ local function find_best_cluster(enemies, turret_pos, radius, min_targets)
 end
 
 -- ---------------------------------------------------------------------------
+-- Aiming: turn the barrel toward the target.
+-- relative_turret_orientation is 0 = north, rising clockwise (0.25 = east,
+-- 0.5 = south, 0.75 = west). The property only exists on turret-ish entities
+-- (vehicle turret, artillery turret/wagon), so the nil check keeps this safe.
+-- Pure function of positions => multiplayer-safe.
+-- ---------------------------------------------------------------------------
+local function orientation_to(from_pos, to_pos)
+  local dx = to_pos.x - from_pos.x
+  local dy = to_pos.y - from_pos.y
+  if dx == 0 and dy == 0 then return nil end
+  local o = math.atan(dx, -dy) / (2 * math.pi)
+  if o < 0 then o = o + 1 end
+  return o
+end
+
+local function aim_turret(turret, target)
+  if turret.relative_turret_orientation == nil then return end
+  local o = orientation_to(turret.position, target)
+  if o ~= nil then
+    turret.relative_turret_orientation = o
+  end
+end
+
+-- ---------------------------------------------------------------------------
 -- Firing
 -- ---------------------------------------------------------------------------
 local function try_fire(turret, centroid, tick)
@@ -202,6 +226,9 @@ local function scan_turret(turret, radius, min_targets, tick)
 
   local centroid = find_best_cluster(enemies, pos, radius, min_targets)
   if centroid then
+    -- Traverse the barrel even when the shot itself is blocked by cooldown or
+    -- missing ammo, so the turret visibly tracks its target like vanilla.
+    aim_turret(turret, centroid)
     try_fire(turret, centroid, tick)
   end
   return "ok"

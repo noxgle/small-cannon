@@ -219,7 +219,7 @@ Runs during gameplay. Keeps a registry of all placed small turrets, disables the
 - The shell animation uses the standard artillery projectile graphics instead of dedicated custom art.
 - The mod has not been tested with other mods that add or modify artillery, so ammo-category conflicts may occur.
 - The script only fires `small-cannon-shell` ammo — load the custom shells. Regular tank shells can still be fired manually with the artillery remote.
-- The barrel does not traverse toward script-fired targets (the gun itself never shoots — the shell is spawned by the script). You will see the muzzle flash and the shell arcing to the target.
+- The barrel turns toward the targeted cluster (via `relative_turret_orientation`) but does not play the full vanilla firing cycle — the gun itself never shoots, the shell is spawned by the script. You will see the traverse, the muzzle flash and the shell arcing to the target.
 - Requires **Factorio 2.0** — it does not work with Factorio 1.1.
 
 ---
