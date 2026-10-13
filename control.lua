@@ -140,8 +140,15 @@ local function try_fire(turret, centroid, tick)
 
   local surface = turret.surface
   local pos = turret.position
+  -- NOTE: oriented explosions (like the muzzle flash) REQUIRE a target when
+  -- created from script, otherwise create_entity throws unrecoverably.
   if prototypes.entity[MUZZLE_FLASH] then
-    surface.create_entity({ name = MUZZLE_FLASH, position = pos, force = turret.force })
+    surface.create_entity({
+      name = MUZZLE_FLASH,
+      position = pos,
+      target = { x = centroid.x, y = centroid.y },
+      force = turret.force
+    })
   end
   surface.create_entity({
     name = PROJECTILE_NAME,
