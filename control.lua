@@ -25,6 +25,11 @@ local MUZZLE_FLASH = "artillery-cannon-muzzle-flash"
 local RANGE = 96
 local MIN_RANGE = 5
 local COOLDOWN = 60 -- ticks between shots, mirrors the gun prototype
+-- Barrel-tip offset (tiles) from the turret center along the aim direction.
+-- Mirrors the gun's projectile_creation_distance so the muzzle flash and the
+-- shell emerge at the barrel tip instead of the turret base. Tune if the
+-- scaled (0.65x) visuals place the tip visibly elsewhere.
+local MUZZLE_DISTANCE = 1.5
 local MAX_TURRETS_PER_SCAN = 10 -- round-robin budget per scan (UPS safety)
 local MAX_ENEMIES_PER_TURRET = 200 -- per-turret scan cap (UPS safety)
 
@@ -170,19 +175,30 @@ local function try_fire(turret, centroid, tick)
 
   local surface = turret.surface
   local pos = turret.position
+  -- Spawn visuals at the barrel tip, not the turret center.
+  local dx = centroid.x - pos.x
+  local dy = centroid.y - pos.y
+  local len = math.sqrt(dx * dx + dy * dy)
+  local muzzle = { x = pos.x, y = pos.y }
+  if len > 0 then
+    muzzle = {
+      x = pos.x + dx / len * MUZZLE_DISTANCE,
+      y = pos.y + dy / len * MUZZLE_DISTANCE
+    }
+  end
   -- NOTE: oriented explosions (like the muzzle flash) REQUIRE a target when
   -- created from script, otherwise create_entity throws unrecoverably.
   if prototypes.entity[MUZZLE_FLASH] then
     surface.create_entity({
       name = MUZZLE_FLASH,
-      position = pos,
+      position = muzzle,
       target = { x = centroid.x, y = centroid.y },
       force = turret.force
     })
   end
   surface.create_entity({
     name = PROJECTILE_NAME,
-    position = { x = pos.x, y = pos.y },
+    position = muzzle,
     target = { x = centroid.x, y = centroid.y },
     speed = 1,
     force = turret.force
@@ -194,6 +210,11 @@ local function scan_turret(turret, radius, min_targets, tick)
   if not turret or not turret.valid then return "dead" end
   local surface = turret.surface
   if not surface or not surface.valid then return "dead" end
+
+  -- No ammo => nothing to do: skip the expensive enemy scan AND the barrel
+  -- traverse, so an unloaded turret sits still instead of tracking targets.
+  local ammo_inv = turret.get_inventory(defines.inventory.artillery_turret_ammo)
+  if not ammo_inv or ammo_inv.get_item_count(AMMO_NAME) < 1 then return "ok" end
 
   local pos = turret.position
   local area = {
