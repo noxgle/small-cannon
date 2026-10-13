@@ -28,5 +28,14 @@ data:extend({
     minimum_value = 1,
     maximum_value = 10,
     order = "c"
+  },
+  {
+    type = "double-setting",
+    name = "small-cannon-aim-offset",
+    setting_type = "runtime-global",
+    default_value = 0,
+    minimum_value = -0.5,
+    maximum_value = 0.5,
+    order = "d"
   }
 })

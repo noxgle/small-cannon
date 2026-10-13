@@ -42,6 +42,7 @@ local function ensure_storage()
   storage.scan_index = storage.scan_index or 0
   storage.last_scan_tick = storage.last_scan_tick or 0
   storage.last_shot = storage.last_shot or {} -- [unit_number] = tick
+  storage.aim_targets = storage.aim_targets or {} -- [unit_number] = {x, y}
 end
 
 local function register_turret(entity)
@@ -67,6 +68,7 @@ local function unregister_turret(unit_number)
   ensure_storage()
   storage.small_turrets[unit_number] = nil
   storage.last_shot[unit_number] = nil
+  storage.aim_targets[unit_number] = nil
   -- Order array is rebuilt lazily during scans; stale entries are skipped.
 end
 
@@ -74,6 +76,7 @@ local function resync_turrets()
   ensure_storage()
   storage.small_turrets = {}
   storage.turret_order = {}
+  storage.aim_targets = {}
   for _, surface in pairs(game.surfaces) do
     local found = surface.find_entities_filtered({ name = TURRET_NAME })
     for _, entity in pairs(found) do
@@ -154,11 +157,14 @@ local function orientation_to(from_pos, to_pos)
   return o
 end
 
-local function aim_turret(turret, target)
+local function aim_turret(turret, target, offset)
   if turret.relative_turret_orientation == nil then return end
   local o = orientation_to(turret.position, target)
   if o ~= nil then
-    turret.relative_turret_orientation = o
+    -- Diagnostic calibration (mod setting small-cannon-aim-offset, in full
+    -- turns): added on top of the computed angle. Use it if the barrel
+    -- persistently points away from the muzzle-flash direction.
+    turret.relative_turret_orientation = (o + (offset or 0)) % 1
   end
 end
 
@@ -247,9 +253,13 @@ local function scan_turret(turret, radius, min_targets, tick)
 
   local centroid = find_best_cluster(enemies, pos, radius, min_targets)
   if centroid then
-    -- Traverse the barrel even when the shot itself is blocked by cooldown or
-    -- missing ammo, so the turret visibly tracks its target like vanilla.
-    aim_turret(turret, centroid)
+    -- Remember the target and traverse the barrel even when the shot itself
+    -- is blocked by cooldown, so the turret visibly tracks like vanilla.
+    -- (Ammo is checked at the top of this function, so we always can fire
+    -- when the cooldown allows.)
+    storage.aim_targets[turret.unit_number] = centroid
+    local offset = settings.global["small-cannon-aim-offset"].value or 0
+    aim_turret(turret, centroid, offset)
     try_fire(turret, centroid, tick)
   end
   return "ok"
@@ -260,6 +270,17 @@ end
 -- ---------------------------------------------------------------------------
 local function on_tick(event)
   ensure_storage()
+  -- Re-pin stored barrel aims every tick (cheap: one float write per turret
+  -- that has a target). The engine eases the barrel toward the set angle at
+  -- turret_rotation_speed, so this keeps it converging on the latest target
+  -- instead of drifting or stalling between throttled scans.
+  local offset = settings.global["small-cannon-aim-offset"].value or 0
+  for unit, target in pairs(storage.aim_targets) do
+    local turret = storage.small_turrets[unit]
+    if turret and turret.valid then
+      aim_turret(turret, target, offset)
+    end
+  end
   local interval = settings.global["small-cannon-scan-interval"].value or 60
   if event.tick - storage.last_scan_tick < interval then return end
   storage.last_scan_tick = event.tick
@@ -293,6 +314,7 @@ local function on_tick(event)
       dead_set[u] = true
       storage.small_turrets[u] = nil
       storage.last_shot[u] = nil
+      storage.aim_targets[u] = nil
     end
     local fresh = {}
     for _, u in ipairs(order) do

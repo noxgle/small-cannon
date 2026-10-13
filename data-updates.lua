@@ -55,6 +55,11 @@ small_turret.minable = { mining_time = 1, result = "small-artillery-turret" }
 -- alert icons and inserters keep working -- it just never shoots on its own.
 -- Manual artillery-remote targeting still works.
 small_turret.disable_automatic_firing = true
+-- 10x faster barrel traverse than vanilla (0.001 -> 0.01): control.lua aims
+-- the barrel via relative_turret_orientation and the engine eases toward the
+-- set angle at this speed. Vanilla rate (~16s for a full turn) would leave
+-- the barrel perpetually lagging behind moving targets.
+small_turret.turret_rotation_speed = 0.01
 -- Scale down collision/selection box to match smaller visuals
 if small_turret.collision_box then
   small_turret.collision_box = {

@@ -61,6 +61,7 @@ Tunable in Mod Settings → Map (runtime-global, defaults in parentheses):
 | Targeting scan interval (ticks) | 60 (1 second) | 10–600 |
 | Cluster radius (tiles) | 8 | 2–30 |
 | Minimum targets per cluster | 1 | 1–10 |
+| Aim calibration (turns) | 0 | -0.5–0.5 |
 
 Performance notes: scans run at most once per interval and process at most 10 turrets per scan (round-robin), with max 200 enemies evaluated per turret. Lowering the scan interval improves reaction time but costs more UPS.
 
@@ -219,7 +220,8 @@ Runs during gameplay. Keeps a registry of all placed small turrets, disables the
 - The shell animation uses the standard artillery projectile graphics instead of dedicated custom art.
 - The mod has not been tested with other mods that add or modify artillery, so ammo-category conflicts may occur.
 - The script only fires `small-cannon-shell` ammo — load the custom shells. Regular tank shells can still be fired manually with the artillery remote.
-- The barrel turns toward the targeted cluster (via `relative_turret_orientation`) but does not play the full vanilla firing cycle — the gun itself never shoots, the shell is spawned by the script. You will see the traverse, the muzzle flash and the shell arcing to the target.
+- The barrel turns toward the targeted cluster (via `relative_turret_orientation`, at 10x the vanilla traverse speed so it keeps up with moving targets) but does not play the full vanilla firing cycle — the gun itself never shoots, the shell is spawned by the script. You will see the traverse, the muzzle flash and the shell arcing to the target.
+- If the barrel persistently points away from the target (e.g. a quarter turn off), use the **Aim calibration** map setting to correct it live (`-0.25` / `0.25` = quarter turn) and report the working value so it can become the default.
 - Requires **Factorio 2.0** — it does not work with Factorio 1.1.
 
 ---
