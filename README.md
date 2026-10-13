@@ -8,14 +8,15 @@ A Factorio 2.0 mod that adds a small artillery turret available earlier than sta
 
 1. [Description](#description)
 2. [New turret: Small Artillery](#new-turret-small-artillery)
-3. [New ammo: Small Cannon Shell](#new-ammo-small-cannon-shell)
-4. [Technology](#technology)
-5. [Recipes](#recipes)
-6. [Comparison: Small vs Standard Artillery](#comparison-small-vs-standard-artillery)
-7. [Installation](#installation)
-8. [Mod files](#mod-files)
-9. [Known issues](#known-issues)
-10. [License](#license)
+3. [Smart cluster targeting](#smart-cluster-targeting)
+4. [New ammo: Small Cannon Shell](#new-ammo-small-cannon-shell)
+5. [Technology](#technology)
+6. [Recipes](#recipes)
+7. [Comparison: Small vs Standard Artillery](#comparison-small-vs-standard-artillery)
+8. [Installation](#installation)
+9. [Mod files](#mod-files)
+10. [Known issues](#known-issues)
+11. [License](#license)
 
 ---
 
@@ -39,7 +40,29 @@ The turret uses the `cannon-shell` ammo category, so it can also accept regular 
 | Ammo category | `cannon-shell` |
 | Projectile creation distance | 1.5 |
 
-**Automatic targeting** — the turret automatically targets and fires at enemies within range, just like standard artillery.
+**Smart cluster targeting** — a runtime script fires at the largest enemy group in range instead of vanilla auto-fire (see below).
+
+---
+
+## Smart cluster targeting
+
+The turret's vanilla auto-fire is disabled (`control.lua` sets the turret inactive). Instead, a script scans for enemy clusters and fires one custom shell at the center of the **largest** cluster:
+
+- A cluster means at least `Minimum targets per cluster` enemies (biters, spitters, worms, spawners) within `Cluster radius` of each other.
+- The largest cluster wins; ties go to the cluster closest to the turret.
+- With the default minimum of 1, even lone targets are engaged. Raise the minimum to save ammo for groups only.
+- Only `small-cannon-shell` ammo is consumed — one shell per shot, with a 1-second cooldown per turret.
+- The projectile is spawned directly by the script, so vanilla artillery turrets nearby are **not** triggered (no wasted expensive shells).
+
+Tunable in Mod Settings → Map (runtime-global, defaults in parentheses):
+
+| Setting | Default | Range |
+|---------|---------|-------|
+| Targeting scan interval (ticks) | 60 (1 second) | 10–600 |
+| Cluster radius (tiles) | 8 | 2–30 |
+| Minimum targets per cluster | 1 | 1–10 |
+
+Performance notes: scans run at most once per interval and process at most 10 turrets per scan (round-robin), with max 200 enemies evaluated per turret. Lowering the scan interval improves reaction time but costs more UPS.
 
 ---
 
@@ -156,6 +179,8 @@ small-cannon/
 ├── info.json            # Mod metadata: name, version, dependencies
 ├── data.lua             # New prototypes: ammo, projectile, recipes, technology
 ├── data-updates.lua     # Copies and modifies the base turret and gun
+├── settings.lua         # Runtime-global settings for cluster targeting
+├── control.lua          # Smart cluster targeting (turret registry, scan, manual fire)
 ├── locale/              # Translations for supported languages
 └── README.md            # This file
 ```
@@ -178,6 +203,14 @@ Runs after base data is loaded. It copies the standard artillery turret prototyp
 - Creates a new gun prototype (`small-artillery-cannon`) with modified attack parameters, such as range and fire rate
 - Links the new turret to the new gun through the `gun` field
 
+### `settings.lua`
+
+Defines three runtime-global settings: scan interval, cluster radius, and minimum targets per cluster.
+
+### `control.lua`
+
+Runs during gameplay. Keeps a registry of all placed small turrets, disables their vanilla auto-fire, then periodically scans for enemy clusters and fires script-spawned `small-cannon-shell-projectile` entities at cluster centroids (one shell consumed per shot, 1-second cooldown per turret).
+
 ---
 
 ## Known issues
@@ -185,6 +218,7 @@ Runs after base data is loaded. It copies the standard artillery turret prototyp
 - The turret graphics are based on a **scaled-down** version of the original artillery turret texture, so the proportions may not look perfect.
 - The shell animation uses the standard artillery projectile graphics instead of dedicated custom art.
 - The mod has not been tested with other mods that add or modify artillery, so ammo-category conflicts may occur.
+- With smart targeting active, regular tank shells loaded into the turret sit idle — the script only fires `small-cannon-shell` ammo. Load the custom shells.
 - Requires **Factorio 2.0** — it does not work with Factorio 1.1.
 
 ---
