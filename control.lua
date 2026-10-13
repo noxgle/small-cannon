@@ -11,11 +11,9 @@
 -- their expensive shells). Spawning our own projectile keeps full control:
 -- only small turrets fire and only small-cannon-shells are consumed.
 --
--- Barrel aiming copies the engine-assigned orientation of the freshly spawned
--- muzzle flash, so the barrel points exactly where the shot animation
--- points. The computed angle (+ Aim calibration setting) is used for
--- tracking between shots and as fallback when the flash orientation is
--- unreadable.
+-- Barrel aiming uses the computed angle to the target MINUS the turret body's
+-- own direction (relative_turret_orientation is body-relative, and each
+-- turret may face its own way), plus the Aim calibration setting on top.
 --
 -- NOTE: vanilla auto-fire is disabled at the prototype level
 -- (disable_automatic_firing in data-updates.lua), so turrets stay ACTIVE and
@@ -172,6 +170,20 @@ local function get_aim_offset()
   return 0
 end
 
+-- The barrel angle is RELATIVE to the turret body's own direction: every
+-- turret placed/rotated differently needs its own correction, otherwise each
+-- barrel ends up off by its body's facing. Hence: absolute angle, minus the
+-- body direction (defines.direction north=0 .. northwest=7, i.e. dir/8 turn),
+-- plus the manual Aim calibration on top. Guarded: bodies without direction
+-- support simply contribute 0.
+local function body_direction_offset(turret)
+  if turret.supports_direction then
+    local d = turret.direction
+    if type(d) == "number" then return d / 8 end
+  end
+  return 0
+end
+
 local function aim_turret(turret, target, offset)
   if turret.relative_turret_orientation == nil then return nil end
   local o = orientation_to(turret.position, target)
@@ -179,24 +191,9 @@ local function aim_turret(turret, target, offset)
     -- Diagnostic calibration (mod setting small-cannon-aim-offset, in full
     -- turns): added on top of the computed angle. Use it if the barrel
     -- persistently points away from the muzzle-flash direction.
-    local applied = (o + (offset or 0)) % 1
+    local applied = (o + (offset or 0) - body_direction_offset(turret)) % 1
     turret.relative_turret_orientation = applied
     return applied
-  end
-  return nil
-end
-
--- Reads the engine-assigned orientation of a freshly created oriented entity
--- (here: the muzzle flash). The engine orients the flash along
--- position -> target, so its angle IS the true shot direction -- copying it
--- onto the barrel sidesteps any convention mismatch in our own math.
--- Returns a number in [0, 1) or nil. pcall-guarded: not every entity type
--- exposes a readable orientation, and a failed read must never break firing.
-local function read_flash_orientation(flash)
-  if not flash or not flash.valid then return nil end
-  local ok, value = pcall(function() return flash.orientation end)
-  if ok and type(value) == "number" and value >= 0 and value < 1 then
-    return value
   end
   return nil
 end
@@ -209,7 +206,7 @@ local PARK_ORIENTATION = 0
 local function park_turret(turret)
   if turret.relative_turret_orientation == nil then return end
   storage.aim_targets[turret.unit_number] = nil
-  turret.relative_turret_orientation = (PARK_ORIENTATION + get_aim_offset()) % 1
+  turret.relative_turret_orientation = (PARK_ORIENTATION + get_aim_offset() - body_direction_offset(turret)) % 1
 end
 
 -- ---------------------------------------------------------------------------
@@ -238,21 +235,17 @@ local function try_fire(turret, centroid, tick)
   end
   -- NOTE: oriented explosions (like the muzzle flash) REQUIRE a target when
   -- created from script, otherwise create_entity throws unrecoverably.
+  -- NOTE: we deliberately do NOT copy the flash's own orientation onto the
+  -- barrel: reads of flash.orientation come back as constant 0 on explosions,
+  -- which used to pin every barrel north and freeze traverse (v1.1.12 bug).
+  -- The visual flash itself is engine-oriented and stays correct.
   if prototypes.entity[MUZZLE_FLASH] then
-    local flash = surface.create_entity({
+    surface.create_entity({
       name = MUZZLE_FLASH,
       position = muzzle,
       target = { x = centroid.x, y = centroid.y },
       force = turret.force
     })
-    -- Aim the barrel EXACTLY like the shot animation: copy the engine's own
-    -- orientation from the flash we just spawned. When unreadable, keep the
-    -- math-derived angle already set during the scan (fallback, no harm).
-    local derived = read_flash_orientation(flash)
-    if derived ~= nil and turret.valid and turret.relative_turret_orientation ~= nil then
-      turret.relative_turret_orientation = derived
-      storage.aim_targets[turret.unit_number] = derived
-    end
   end
   surface.create_entity({
     name = PROJECTILE_NAME,
