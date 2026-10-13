@@ -31,13 +31,13 @@ data:extend({
   },
   -- NOTE: string dropdown instead of a double setting on purpose: the
   -- in-game numeric field does not accept typing a minus sign, so negative
-  -- offsets would be unreachable. Values step by 1/8 turn (0.125 = 45 deg).
+  -- offsets would be unreachable. Values step by 1/16 turn (0.0625 = 22.5 deg).
   {
     type = "string-setting",
     name = "small-cannon-aim-offset",
     setting_type = "runtime-global",
     default_value = "0",
-    allowed_values = { "0", "0.125", "-0.125", "0.25", "-0.25", "0.375", "-0.375", "0.5", "-0.5" },
+    allowed_values = { "0", "0.0625", "-0.0625", "0.125", "-0.125", "0.1875", "-0.1875", "0.25", "-0.25", "0.3125", "-0.3125", "0.375", "-0.375", "0.4375", "-0.4375", "0.5", "-0.5" },
     order = "d"
   }
 })
